@@ -4,7 +4,7 @@ using Il2CppScheduleOne.Persistence;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.3.0", "holyfurries")]
+[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.3.1", "holyfurries")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace CasinoLedger;

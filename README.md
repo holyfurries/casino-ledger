@@ -22,7 +22,7 @@ they are not carried over; the old files are left in place. The mod never change
 
 ## Settings
 
-The game's settings screen gets a **Casino** tab with a switch for the standings panel, in the
+The game's settings screen gets a **holyfurries** tab with a Casino standings switch, in the
 main menu and the pause menu. Everything else is in `UserData/MelonPreferences.cfg`, section `CasinoLedger`:
 
 | Key | Default | Meaning |
