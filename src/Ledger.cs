@@ -120,19 +120,28 @@ public sealed class Ledger
     public string serialize()
     {
         var text = new StringBuilder(header).Append('\n');
+        var rows = new string[player_count_max * game_count];
+        int row_count = lifetime_rows(rows);
+        for (int i = 0; i < row_count; i++) text.Append(rows[i]).Append('\n');
+        return text.ToString();
+    }
+
+    public int lifetime_rows(Span<string> target)
+    {
+        int count = 0;
         for (int i = 0; i < player_count; i++)
         {
-            for (int game = 0; game < game_count; game++)
+            for (int game = 0; game < game_count && count < target.Length; game++)
             {
                 Totals totals = players[i].lifetime[game];
                 if (totals.round_count == 0 && totals.wagered == 0 && totals.returned == 0) continue;
-                text.Append(string.Join(' ', players[i].key, game.ToString(CultureInfo.InvariantCulture),
+                target[count++] = string.Join(' ', players[i].key, game.ToString(CultureInfo.InvariantCulture),
                     totals.round_count.ToString(CultureInfo.InvariantCulture), totals.win_count.ToString(CultureInfo.InvariantCulture),
                     totals.loss_count.ToString(CultureInfo.InvariantCulture), number(totals.wagered), number(totals.returned),
-                    number(totals.win_largest), number(totals.loss_largest))).Append('\n');
+                    number(totals.win_largest), number(totals.loss_largest));
             }
         }
-        return text.ToString();
+        return count;
     }
 
     public void load(string text)
@@ -142,19 +151,24 @@ public sealed class Ledger
         if (lines.Length == 0 || lines[0] != header) throw new FormatException("Unknown casino ledger header.");
         if (lines.Length > 1 + player_count_max * game_count) throw new FormatException("Casino ledger has too many rows.");
         clear();
-        for (int i = 1; i < lines.Length; i++)
-        {
-            string[] fields = lines[i].Split(' ');
-            if (fields.Length != 9) throw new FormatException("Casino ledger row has the wrong field count.");
-            int game = int.Parse(fields[1], CultureInfo.InvariantCulture);
-            var totals = new Totals(int.Parse(fields[2], CultureInfo.InvariantCulture), int.Parse(fields[3], CultureInfo.InvariantCulture),
-                int.Parse(fields[4], CultureInfo.InvariantCulture), parse(fields[5]), parse(fields[6]), parse(fields[7]), parse(fields[8]));
-            if (game < 0 || game >= game_count) throw new FormatException("Casino ledger row names an unknown game.");
-            if (totals.round_count < 0 || totals.win_count < 0 || totals.loss_count < 0 || totals.push_count < 0) throw new FormatException("Casino ledger row has impossible counts.");
-            if (fields[0].Length == 0 || fields[0].Length > 64) throw new FormatException("Casino ledger row has a bad player key.");
-            PlayerRecord player = find(fields[0]) ?? claim(fields[0]);
-            player.lifetime[game] = totals;
-        }
+        for (int i = 1; i < lines.Length; i++) replace_lifetime_row(lines[i]);
+    }
+
+    /// Returns false when the row is older than the rounds already counted today, which would break day <= lifetime.
+    public bool replace_lifetime_row(string row)
+    {
+        string[] fields = row.Split(' ');
+        if (fields.Length != 9) throw new FormatException("Casino ledger row has the wrong field count.");
+        int game = int.Parse(fields[1], CultureInfo.InvariantCulture);
+        var totals = new Totals(int.Parse(fields[2], CultureInfo.InvariantCulture), int.Parse(fields[3], CultureInfo.InvariantCulture),
+            int.Parse(fields[4], CultureInfo.InvariantCulture), parse(fields[5]), parse(fields[6]), parse(fields[7]), parse(fields[8]));
+        if (game < 0 || game >= game_count) throw new FormatException("Casino ledger row names an unknown game.");
+        if (totals.round_count < 0 || totals.win_count < 0 || totals.loss_count < 0 || totals.push_count < 0) throw new FormatException("Casino ledger row has impossible counts.");
+        if (fields[0].Length == 0 || fields[0].Length > 64) throw new FormatException("Casino ledger row has a bad player key.");
+        PlayerRecord player = find(fields[0]) ?? claim(fields[0]);
+        if (totals.round_count < player.day[game].round_count) return false;
+        player.lifetime[game] = totals;
+        return true;
     }
 
     public static string format_money(double value, bool signed)

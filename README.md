@@ -8,14 +8,15 @@ Who is actually winning at the casino. Tracks every player's profit and loss acr
   with the game HUD, starting at $0 for everyone.
 - **Day-end stats.** After the sleep summary closes, a stats screen shows the group's
   wagered, returned and profit totals, a chart of each player's running profit over the day,
-  profit per game, and the best and worst single rounds. Press Space to close it.
+  profit per game, and the best and worst single rounds. Click Continue to close it.
 - **Totals per save.** Rounds, wins, losses, pushes, amount wagered, amount returned and
   largest win and loss, per player and per game, kept in one file per save under
   `UserData/CasinoLedger`. A co-op world uses the same file name on the host and every client.
 
-Install it on every player. Slot results of all players are seen by everyone with the mod.
-Card game results are shared between players who have the mod. Totals for other players
-cover the rounds you were present for.
+Install it on every player. Each player's game reports its own rounds to the rest of the
+session, and the host's totals are the shared truth: anyone who joins late or missed rounds is
+brought in line when they join and again at the end of each day. Players without the mod are
+not tracked.
 
 Totals from Casino Ledger 0.1 (`ledger.txt`) and Death Notices 0.2 mixed every save together, so
 they are not carried over; the old files are left in place. The mod never changes payouts, odds or money.

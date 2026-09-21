@@ -18,7 +18,6 @@ namespace CasinoLedger;
 
 internal static class Hooks
 {
-    private const string round_key_prefix = "CasinoLedger|";
     private const float spin_settle_seconds_max = 8f;
     private sealed class Table
     {
@@ -49,8 +48,6 @@ internal static class Hooks
                 prefix: new HarmonyMethod(typeof(Hooks), nameof(card_round_before_settlement)),
                 finalizer: new HarmonyMethod(typeof(Hooks), nameof(card_round_after_settlement)));
         }
-        harmony.Patch(AccessTools.Method(typeof(CasinoGamePlayers), "RpcLogic___ReceivePlayerFloat_2317689966"),
-            postfix: new HarmonyMethod(typeof(Hooks), nameof(card_round_receive)));
         harmony.Patch(AccessTools.Method(typeof(SlotMachine), "RpcLogic___StartSpin_2659526290"),
             postfix: new HarmonyMethod(typeof(Hooks), nameof(spin_begin)));
         harmony.Patch(AccessTools.Method(typeof(SlotMachine), "DisplayOutcome"),
@@ -123,29 +120,17 @@ internal static class Hooks
         {
             CasinoGame game = __state.game.TryCast<BlackjackGameController>() != null ? CasinoGame.Blackjack : CasinoGame.RideTheBus;
             float returned = Math.Max(MoneyManager.Instance.cashBalance - __state.cash_before, 0f);
-            settle(new Round(CasinoStats.player_key(Player.Local.PlayerCode), Ledger.safe_name(Player.Local.PlayerName), game, __state.stake, returned));
-            string key = round_key_prefix + ((int)game).ToString(CultureInfo.InvariantCulture) + "|" + __state.stake.ToString("R", CultureInfo.InvariantCulture);
-            __state.game.Players.SendPlayerFloat(Player.Local.NetworkObject, key, returned);
+            settle_local(new Round(CasinoStats.player_key(Player.Local.PlayerCode), Ledger.safe_name(Player.Local.PlayerName), game, __state.stake, returned));
         }
         catch (Exception error) { pause(error); }
         return __exception;
     }
 
-    private static void card_round_receive(NetworkConnection __0, NetworkObject __1, string __2, float __3)
+    private static void remote_round(Round round)
     {
-        if (!tracking || __1 == null || __2 == null || !__2.StartsWith(round_key_prefix, StringComparison.Ordinal)) return;
-        try
-        {
-            Player player = __1.GetComponent<Player>();
-            if (player == null || player == Player.Local) return;
-            string[] fields = __2.Split('|');
-            if (fields.Length != 3 || fields[1].Length != 1 || fields[2].Length > 32) return;
-            int game = fields[1][0] - '0';
-            if (game != (int)CasinoGame.Blackjack && game != (int)CasinoGame.RideTheBus) return;
-            if (!float.TryParse(fields[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float stake)) return;
-            settle(new Round(CasinoStats.player_key(player.PlayerCode), Ledger.safe_name(player.PlayerName), (CasinoGame)game, stake, __3));
-        }
-        catch (ArgumentOutOfRangeException error) { MelonLogger.Warning($"Casino Ledger: Ignored a malformed remote round: {error.Message}"); }
+        if (!tracking || Player.Local == null || round.player_key == CasinoStats.player_key(Player.Local.PlayerCode)) return;
+        try { settle(round); }
+        catch (ArgumentOutOfRangeException error) { MelonLogger.Warning($"Casino Ledger: Ignored an out of range remote round: {error.Message}"); }
         catch (Exception error) { pause(error); }
     }
 
@@ -154,18 +139,12 @@ internal static class Hooks
         if (!tracking || __0 == null || __1 == null) return;
         try
         {
-            Player? spinner = null;
-            int count = Math.Min(Player.PlayerList.Count, Ledger.player_count_max);
-            for (int i = 0; i < count; i++)
-            {
-                Player candidate = Player.PlayerList[i];
-                if (candidate != null && candidate.Owner != null && candidate.Owner.ClientId == __0.ClientId) spinner = candidate;
-            }
-            if (spinner == null) return;
+            Player spinner = Player.Local;
+            if (spinner == null || spinner.Owner == null || spinner.Owner.ClientId != __0.ClientId) return;
             int free = -1;
             for (int i = 0; i < spins.Length; i++)
             {
-                if (spins[i].machine == __instance.Pointer) spin_settle(i);
+                if (spins[i].machine == __instance.Pointer) return;
                 if (free < 0 && spins[i].machine == IntPtr.Zero) free = i;
             }
             if (free < 0) throw new InvalidOperationException("More concurrent slot spins than tracked machines.");
@@ -193,7 +172,7 @@ internal static class Hooks
     {
         Round round = spins[index].round;
         spins[index] = default;
-        try { settle(round); }
+        try { settle_local(round); }
         catch (Exception error) { pause(error); }
     }
 
@@ -207,8 +186,15 @@ internal static class Hooks
                 if (spins[i].machine != IntPtr.Zero) spin_settle(i);
             }
             Main.end_day();
+            Sync.send_totals();
         }
         catch (Exception error) { pause(error); }
+    }
+
+    private static void settle_local(Round round)
+    {
+        settle(round);
+        Sync.send_round(round);
     }
 
     private static void settle(Round round)
@@ -234,6 +220,9 @@ internal static class Hooks
             CasinoStats.ledger.clear();
         }
         ledger_path = path;
+        Sync.round_received = remote_round;
+        Sync.totals_changed = save;
+        Sync.connect();
         MelonLogger.Msg($"Casino Ledger: Tracking this save in {Path.GetFileName(path)}.");
     }
 

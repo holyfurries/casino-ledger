@@ -1,4 +1,6 @@
 using System;
+using Il2CppScheduleOne.DevUtilities;
+using Il2CppScheduleOne.PlayerScripts;
 using Il2CppTMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,14 +10,14 @@ namespace CasinoLedger;
 internal static class DaySummary
 {
     private const int line_count_max = 8;
-    private const float lifetime_seconds = 30f;
+    private const string ui_element_name = "CasinoLedgerDaySummary";
     private const float content_width = 1120f;
     private const float panel_height = 330f;
     private const float chart_width = 640f;
     private const float chart_label_width = 210f;
     private const float chart_padding = 22f;
     private const float label_gap = 28f;
-    private const float layout_scale = 0.5f;
+    private const float layout_scale = 0.75f;
     private const float layout_center_y = 468f;
     private static readonly Color[] line_colors =
     {
@@ -24,23 +26,29 @@ internal static class DaySummary
     };
     private static readonly string[] game_names = { "Blackjack", "Ride the Bus", "Slots" };
     private static GameObject? canvas_object;
-    private static float close_seconds;
 
     public static bool showing => canvas_object != null;
 
     public static void reset()
     {
-        if (canvas_object != null) UnityEngine.Object.Destroy(canvas_object);
+        if (canvas_object == null) return;
+        UnityEngine.Object.Destroy(canvas_object);
         canvas_object = null;
+        if (!PlayerSingleton<PlayerCamera>.InstanceExists) return;
+        PlayerCamera camera = PlayerSingleton<PlayerCamera>.Instance;
+        camera.RemoveActiveUIElement(ui_element_name);
+        if (camera.activeUIElements.Count == 0) camera.LockMouse();
     }
 
-    public static void update(float now_seconds)
+    public static void update()
     {
         if (canvas_object == null) return;
-        if (now_seconds >= close_seconds || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Escape)) reset();
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        if (Input.GetKeyDown(KeyCode.Escape)) reset();
     }
 
-    public static void show(Ledger ledger, int day_number, float now_seconds)
+    public static void show(Ledger ledger, int day_number)
     {
         if (ledger.day_round_count <= 0) throw new ArgumentOutOfRangeException(nameof(ledger), "No rounds to summarize.");
         reset();
@@ -50,7 +58,12 @@ internal static class DaySummary
         for (int i = 0; i < key_count; i++) group = group.add(ledger.day(keys[i]));
 
         canvas_object = Ui.canvas("CasinoLedgerDaySummary", 29500);
-        close_seconds = now_seconds + lifetime_seconds;
+        canvas_object.AddComponent<GraphicRaycaster>();
+        if (PlayerSingleton<PlayerCamera>.InstanceExists)
+        {
+            PlayerSingleton<PlayerCamera>.Instance.AddActiveUIElement(ui_element_name);
+            PlayerSingleton<PlayerCamera>.Instance.FreeMouse();
+        }
         var backdrop = new GameObject("Backdrop");
         backdrop.transform.SetParent(canvas_object.transform, false);
         Image backdrop_image = backdrop.AddComponent<Image>();
@@ -86,7 +99,12 @@ internal static class DaySummary
         RectTransform button = Ui.panel(layout, "Continue", Ui.loss);
         Ui.place(button, top_center, top_center, new Vector2(0f, -730f), new Vector2(380f, 76f));
         TextMeshProUGUI button_label = Ui.text(button, "Label", 28f, TextAlignmentOptions.Center);
-        button_label.text = "Press space to continue";
+        button_label.text = "Continue";
+        Image button_image = button.GetComponent<Image>();
+        button_image.raycastTarget = true;
+        Button continue_button = button.gameObject.AddComponent<Button>();
+        continue_button.targetGraphic = button_image;
+        continue_button.onClick.AddListener(new Action(reset));
         Ui.stretch(button_label.rectTransform, inset: 0f);
     }
 

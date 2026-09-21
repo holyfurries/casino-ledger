@@ -56,6 +56,24 @@ internal static class Program
         require(CasinoStats.world_key(0, null).Length == 16, "Missing organisation name still yields a key");
         rejects<ArgumentOutOfRangeException>(() => CasinoStats.world_key(1, new string('a', 129)), "Oversized organisation name rejected");
 
+        string alex_key = new string('a', 64);
+        var played = new Round(alex_key, "Al|ex", CasinoGame.RideTheBus, 250, 1000.5);
+        string round_message = Wire.round(played);
+        require(Wire.kind(round_message) == WireKind.Round && Wire.parse_round(round_message) == played with { player_name = "Alex" }, "Round messages round-trip with a safe name");
+        require(Wire.kind(Wire.hello) == WireKind.Hello && Wire.kind("ready") == WireKind.None && Wire.kind(null) == WireKind.None, "Only ledger messages are recognised");
+        require(Wire.kind(Wire.prefix + new string('x', Wire.length_max)) == WireKind.None, "Oversized messages are ignored");
+        rejects<FormatException>(() => Wire.parse_round(Wire.prefix + "round|short|0|1|1|Alex"), "Bad player key rejected");
+        rejects<FormatException>(() => Wire.parse_round(Wire.prefix + $"round|{alex_key}|7|1|1|Alex"), "Unknown game rejected");
+        var host = new Ledger();
+        for (int i = 0; i < 3; i++) host.settle(new Round(alex_key, "Alex", CasinoGame.Slots, 100, 0));
+        var rows = new string[Ledger.player_count_max * Ledger.game_count];
+        require(host.lifetime_rows(rows) == 1, "One row per player and game with history");
+        var joiner = new Ledger();
+        joiner.settle(new Round(alex_key, "Alex", CasinoGame.Slots, 100, 0));
+        require(joiner.replace_lifetime_row(Wire.parse_total(Wire.total(rows[0]))) && joiner.lifetime(alex_key).net == -300, "A joiner adopts the host totals");
+        for (int i = 0; i < 4; i++) joiner.settle(new Round(alex_key, "Alex", CasinoGame.Slots, 100, 0));
+        require(!joiner.replace_lifetime_row(rows[0]) && joiner.lifetime(alex_key).net == -700, "A stale host row never undercuts rounds counted today");
+
         var busy = new Ledger();
         for (int i = 0; i < 200; i++) busy.settle(new Round("alex", "Alex", CasinoGame.Slots, 10, i % 2 == 0 ? 0 : 25));
         int busy_count = busy.day_series("alex", points);
