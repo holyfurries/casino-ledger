@@ -4,7 +4,7 @@ using Il2CppScheduleOne.Persistence;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.3.5", "holyfurries")]
+[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.4.0", "holyfurries")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace CasinoLedger;
@@ -28,7 +28,6 @@ public sealed class Main : MelonMod
         {
             hud_enabled!.Value = value;
             MelonPreferences.Save();
-            SettingsTab.show_state(value);
         }
     }
     internal static bool ready => running && LoadManager.InstanceExists && LoadManager.Instance.IsGameLoaded;
@@ -45,7 +44,14 @@ public sealed class Main : MelonMod
         CasinoStats.subscriber_failed = error => LoggerInstance.Warning($"A round_settled subscriber threw: {error}");
         CasinoStats.round_settled += note_day_number;
         Hooks.install(HarmonyInstance);
-        SettingsTab.install(HarmonyInstance);
+        register_settings();
+    }
+
+    private static void register_settings()
+    {
+        ModSettings.Settings.toggle("Casino Ledger", "Show standings", hud_enabled!);
+        ModSettings.Settings.slider("Casino Ledger", "Standings size", hud_scale!, minimum: 0.5f, maximum: 3f);
+        ModSettings.Settings.toggle("Casino Ledger", "Day-end stats screen", day_summary_enabled!);
     }
 
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)

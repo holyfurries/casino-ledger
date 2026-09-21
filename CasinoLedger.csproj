@@ -2,7 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>CasinoLedger</AssemblyName>
-    <Version>0.3.5</Version>
+    <Version>0.4.0</Version>
+    <ModSettingsDll Condition="'$(ModSettingsDll)' == ''">../mod-settings/bin/Release/net6.0/ModSettings.dll</ModSettingsDll>
     <Nullable>enable</Nullable>
     <PathMap>$(MSBuildProjectDirectory)=/_/</PathMap>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -13,6 +14,7 @@
     <Reference Include="$(MelonLoaderDir)/net6/0Harmony.dll" Private="false" />
     <Reference Include="$(MelonLoaderDir)/net6/Il2CppInterop.Runtime.dll" Private="false" />
     <Reference Include="$(MelonLoaderDir)/Il2CppAssemblies/*.dll" Private="false" />
+    <Reference Include="$(ModSettingsDll)" Private="false" />
   </ItemGroup>
   <Target Name="CheckGameReferences" BeforeTargets="ResolveReferences">
     <Error Condition="!Exists('$(MelonLoaderDir)/Il2CppAssemblies/Assembly-CSharp.dll')" Text="Set MelonLoaderDir to a MelonLoader directory with generated Il2CppAssemblies." />

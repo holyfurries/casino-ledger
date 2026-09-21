@@ -1,6 +1,6 @@
 # Development
 
-Version 0.3.5, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
+Version 0.4.0, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
 
 ## Layout
 
@@ -35,14 +35,9 @@ of `PlayerCode`. The ledger file is `<world_key>.txt`, where the world key hashe
 `GameManager.seed` and `OrganisationName`, both replicated to clients, so every peer in a
 world names the same save. It loads on the first update after `IsGameLoaded`, once clients
 have that data; hooks ignore rounds until then. The HUD shows these per-save totals.
-`SettingsTab` postfixes `SettingsScreen.Awake`. If no category has a tab named `HolyfurriesTab` it
-clones the last category's tab toggle and panel, hides the cloned rows and appends a
-`SettingsCategory` to `Categories` so `ShowCategory` handles it. It then copies a game
-`SettingsToggle` row into that panel, removes the game's component and stacks it under any rows
-other holyfurries mods added, naming it through `UIOption.optionName` because `UIOption.Awake`
-rewrites the label. The tab bar is a left-aligned layout of fixed 90 unit tabs, so all tabs are
-narrowed to fit the 700 unit window; the file is meant to be copied into them. A failure logs a warning
-and leaves the config file as the only switch.
+In-game options go through the Mod Settings mod (`ModSettings.Settings`), a required
+dependency; the build references `../mod-settings/bin/Release/net6.0/ModSettings.dll`
+(override with `-p:ModSettingsDll=`), so build Mod Settings first.
 Hook failures pause tracking for the scene; overlay failures disable only the overlay.
 
 ## Build
@@ -68,9 +63,8 @@ Build and tests do not establish native UI layout, Harmony RPC ordering or repli
   at double size and drawn at half scale), and the backdrop hides the HUD and minimap.
 - Sleep with and without casino rounds; the stats screen follows the sleep summary, closes
   on Space, Escape or after thirty seconds, and the next day starts from zero.
-- Settings screen, main menu and pause menu: a holyfurries tab follows Other, opens a panel with a
-  Casino standings switch that matches `hud_enabled`, flips the HUD, and survives reopening the
-  menu. The other tabs still switch. Known gap: gamepad bumper cycling is untested.
+- Mods tab: Casino Ledger heading with Show standings, Standings size and Day-end stats
+  screen; F7 flips the first while the tab is open.
 - Two saves keep separate totals; a co-op client logs the same ledger file name as the host
   and keeps its totals after rejoining. HUD text matches the Clear Minimap clock (12 units) at `hud_scale` 1; corners and outline stay
   concentric at 0.5 and 3; F7 toggles it and the settings switch follows.

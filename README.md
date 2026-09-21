@@ -22,8 +22,9 @@ they are not carried over; the old files are left in place. The mod never change
 
 ## Settings
 
-The game's settings screen gets a **holyfurries** tab with a Casino standings switch (F7 does the same in game), in the
-main menu and the pause menu. Everything else is in `UserData/MelonPreferences.cfg`, section `CasinoLedger`:
+The **Mods** tab of the game's settings screen (from [Mod Settings](https://thunderstore.io/c/schedule-i/p/holyfurries/ModSettings/),
+installed automatically) has the standings switch, the standings size and the day-end stats
+switch. F7 also toggles the standings in game. Everything is stored in `UserData/MelonPreferences.cfg`, section `CasinoLedger`:
 
 | Key | Default | Meaning |
 | --- | --- | --- |
