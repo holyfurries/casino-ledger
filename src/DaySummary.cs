@@ -15,6 +15,8 @@ internal static class DaySummary
     private const float chart_label_width = 210f;
     private const float chart_padding = 22f;
     private const float label_gap = 28f;
+    private const float layout_scale = 0.5f;
+    private const float layout_center_y = 468f;
     private static readonly Color[] line_colors =
     {
         new(0.91f, 0.45f, 0.78f), new(0.95f, 0.60f, 0.18f), new(0.35f, 0.75f, 0.98f), new(0.58f, 0.90f, 0.35f),
@@ -52,31 +54,36 @@ internal static class DaySummary
         var backdrop = new GameObject("Backdrop");
         backdrop.transform.SetParent(canvas_object.transform, false);
         Image backdrop_image = backdrop.AddComponent<Image>();
-        backdrop_image.color = new Color(0f, 0f, 0f, 0.93f);
+        backdrop_image.color = Color.black;
         backdrop_image.raycastTarget = false;
         Ui.stretch(backdrop_image.rectTransform, inset: 0f);
         var top_center = new Vector2(0.5f, 1f);
+        var layout_object = new GameObject("Layout");
+        layout_object.transform.SetParent(canvas_object.transform, false);
+        RectTransform layout = layout_object.AddComponent<RectTransform>();
+        Ui.place(layout, new Vector2(0.5f, 0.5f), top_center, new Vector2(0f, layout_center_y * layout_scale), new Vector2(content_width, 0f));
+        layout.localScale = new Vector3(layout_scale, layout_scale, 1f);
 
-        TextMeshProUGUI title = Ui.text(canvas_object.transform, "Title", 56f, TextAlignmentOptions.Center);
+        TextMeshProUGUI title = Ui.text(layout, "Title", 36f, TextAlignmentOptions.Center);
         title.text = $"Casino stats for day {day_number}";
         Ui.place(title.rectTransform, top_center, top_center, new Vector2(0f, -130f), new Vector2(content_width, 80f));
 
-        RectTransform strip = Ui.outlined_panel(canvas_object.transform, "Totals");
+        RectTransform strip = Ui.outlined_panel(layout, "Totals");
         Ui.place(strip, top_center, top_center, new Vector2(0f, -250f), new Vector2(content_width, 64f));
         strip_cell(strip, 0, "Wagered", Ledger.format_money(group.wagered, signed: false), Color.white);
         strip_cell(strip, 1, "Returned", Ledger.format_money(group.returned, signed: false), Color.white);
         strip_cell(strip, 2, "Profit", Ledger.format_money(group.net, signed: true), Ui.money_color(group.net));
 
-        RectTransform chart = Ui.outlined_panel(canvas_object.transform, "Chart");
+        RectTransform chart = Ui.outlined_panel(layout, "Chart");
         Ui.place(chart, top_center, new Vector2(0f, 1f), new Vector2(-content_width / 2f, -340f), new Vector2(chart_width, panel_height));
         draw_chart(chart, ledger, keys, key_count);
 
-        RectTransform breakdown = Ui.outlined_panel(canvas_object.transform, "Breakdown");
+        RectTransform breakdown = Ui.outlined_panel(layout, "Breakdown");
         float breakdown_width = content_width - chart_width - 26f;
         Ui.place(breakdown, top_center, new Vector2(1f, 1f), new Vector2(content_width / 2f, -340f), new Vector2(breakdown_width, panel_height));
         draw_breakdown(breakdown, breakdown_width, ledger, keys, key_count, group);
 
-        RectTransform button = Ui.panel(canvas_object.transform, "Continue", Ui.loss);
+        RectTransform button = Ui.panel(layout, "Continue", Ui.loss);
         Ui.place(button, top_center, top_center, new Vector2(0f, -730f), new Vector2(380f, 76f));
         TextMeshProUGUI button_label = Ui.text(button, "Label", 28f, TextAlignmentOptions.Center);
         button_label.text = "Press space to continue";

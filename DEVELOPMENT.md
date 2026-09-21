@@ -1,6 +1,6 @@
 # Development
 
-Version 0.3.3, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
+Version 0.3.4, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
 
 ## Layout
 
@@ -64,6 +64,8 @@ Build and tests do not establish native UI layout, Harmony RPC ordering or repli
 - Co-op: a remote player's slot spins and card rounds appear on host and clients, once each.
   Confirm `SendPlayerFloat` with a custom key is relayed for a player leaving the round.
 - HUD position against the quest tracker at 16:9 and ultrawide; hidden with the game HUD.
+- Day stats text matches the game's sleep summary (12 to 18 units there; the layout is authored
+  at double size and drawn at half scale), and the backdrop hides the HUD and minimap.
 - Sleep with and without casino rounds; the stats screen follows the sleep summary, closes
   on Space, Escape or after thirty seconds, and the next day starts from zero.
 - Settings screen, main menu and pause menu: a holyfurries tab follows Other, opens a panel with a
