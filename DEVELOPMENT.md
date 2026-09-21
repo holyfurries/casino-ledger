@@ -1,6 +1,6 @@
 # Development
 
-Version 0.3.4, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
+Version 0.3.5, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
 
 ## Layout
 

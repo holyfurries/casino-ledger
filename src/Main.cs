@@ -4,7 +4,7 @@ using Il2CppScheduleOne.Persistence;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.3.4", "holyfurries")]
+[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.3.5", "holyfurries")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace CasinoLedger;
@@ -13,8 +13,8 @@ public sealed class Main : MelonMod
 {
     private static MelonPreferences_Entry<bool>? hud_enabled;
     private static MelonPreferences_Entry<bool>? day_summary_enabled;
-    private static MelonPreferences_Entry<float>? hud_offset_x;
-    private static MelonPreferences_Entry<float>? hud_offset_y;
+    private static MelonPreferences_Entry<float>? hud_margin_right;
+    private static MelonPreferences_Entry<float>? hud_margin_top;
     private static MelonPreferences_Entry<float>? hud_scale;
     private static MelonPreferences_Entry<KeyCode>? hud_toggle_key;
     private static bool running;
@@ -38,8 +38,8 @@ public sealed class Main : MelonMod
         MelonPreferences_Category preferences = MelonPreferences.CreateCategory("CasinoLedger");
         hud_enabled = preferences.CreateEntry("hud_enabled", true, "Show each player's total casino profit in this save");
         day_summary_enabled = preferences.CreateEntry("day_summary_enabled", true, "Show casino stats after the sleep summary");
-        hud_offset_x = preferences.CreateEntry("hud_offset_x", 32f, "HUD distance from the right screen edge (1920x1080 units)");
-        hud_offset_y = preferences.CreateEntry("hud_offset_y", 420f, "HUD distance from the top screen edge (1920x1080 units)");
+        hud_margin_right = preferences.CreateEntry("hud_margin_right", 13f, "HUD distance from the right screen edge (1920x1080 units)");
+        hud_margin_top = preferences.CreateEntry("hud_margin_top", 420f, "HUD distance from the top screen edge (1920x1080 units)");
         hud_scale = preferences.CreateEntry("hud_scale", 1f, "HUD size multiplier, 0.5 to 3");
         hud_toggle_key = preferences.CreateEntry("hud_toggle_key", KeyCode.F7, "Key that shows or hides the HUD in game; None turns the key off");
         CasinoStats.subscriber_failed = error => LoggerInstance.Warning($"A round_settled subscriber threw: {error}");
@@ -77,7 +77,7 @@ public sealed class Main : MelonMod
             }
             if (Time.unscaledTime < next_hud_refresh_seconds) return;
             next_hud_refresh_seconds = Time.unscaledTime + 0.5f;
-            Hud.refresh(visible: hud_enabled!.Value && !DaySummary.showing, new Vector2(hud_offset_x!.Value, hud_offset_y!.Value),
+            Hud.refresh(visible: hud_enabled!.Value && !DaySummary.showing, new Vector2(hud_margin_right!.Value, hud_margin_top!.Value),
                 hud_scale!.Value);
         }
         catch (Exception error) { disable_ui(error); }

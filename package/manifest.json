@@ -1,6 +1,6 @@
 {
   "name": "CasinoLedger",
-  "version_number": "0.3.4",
+  "version_number": "0.3.5",
   "website_url": "https://github.com/holyfurries/casino-ledger",
   "description": "Per-player casino profit and loss for Blackjack, Ride the Bus and Slots: live HUD standings, a day-end stats screen, and an API for other mods. Co-op, IL2CPP.",
   "dependencies": [

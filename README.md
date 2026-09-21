@@ -29,8 +29,8 @@ main menu and the pause menu. Everything else is in `UserData/MelonPreferences.c
 | --- | --- | --- |
 | `hud_enabled` | `true` | Show the live standings panel |
 | `day_summary_enabled` | `true` | Show the day-end stats screen |
-| `hud_offset_x` | `32` | Panel distance from the right edge, in 1920x1080 units |
-| `hud_offset_y` | `420` | Panel distance from the top edge, in 1920x1080 units |
+| `hud_margin_right` | `13` | Panel distance from the right edge, in 1920x1080 units; the default lines up with Clear Minimap |
+| `hud_margin_top` | `420` | Panel distance from the top edge, in 1920x1080 units |
 | `hud_scale` | `1` | Panel size multiplier from 0.5 to 3 |
 | `hud_toggle_key` | `F7` | Key that shows or hides the panel in game and saves the choice; `None` disables the key |
 
