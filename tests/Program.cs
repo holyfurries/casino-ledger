@@ -58,12 +58,19 @@ internal static class Program
 
         string alex_key = new string('a', 64);
         var played = new Round(alex_key, "Al|ex", CasinoGame.RideTheBus, 250, 1000.5);
-        string round_message = Wire.round(played);
-        require(Wire.kind(round_message) == WireKind.Round && Wire.parse_round(round_message) == played with { player_name = "Alex" }, "Round messages round-trip with a safe name");
+        var spun = new Round(alex_key, "Alex", CasinoGame.Slots, 100, 0);
+        string round_message = Wire.rounds(new[] { played, spun });
+        var received = new Round[Wire.rounds_per_message_max];
+        require(Wire.kind(round_message) == WireKind.Round && Wire.parse_rounds(round_message, received) == 2, "A batch of rounds is recognised");
+        require(received[0] == played with { player_name = "Alex" } && received[1] == spun, "Batched rounds round-trip in order with safe names");
+        var full_batch = new Round[Wire.rounds_per_message_max];
+        Array.Fill(full_batch, new Round(alex_key, new string('W', 24), CasinoGame.RideTheBus, 999999.99, 99999999.99));
+        require(Wire.rounds(full_batch).Length <= Wire.length_max, "A full batch of the longest rounds fits one message");
+        rejects<ArgumentOutOfRangeException>(() => Wire.rounds(new Round[Wire.rounds_per_message_max + 1]), "Oversized batch rejected");
         require(Wire.kind(Wire.hello) == WireKind.Hello && Wire.kind("ready") == WireKind.None && Wire.kind(null) == WireKind.None, "Only ledger messages are recognised");
         require(Wire.kind(Wire.prefix + new string('x', Wire.length_max)) == WireKind.None, "Oversized messages are ignored");
-        rejects<FormatException>(() => Wire.parse_round(Wire.prefix + "round|short|0|1|1|Alex"), "Bad player key rejected");
-        rejects<FormatException>(() => Wire.parse_round(Wire.prefix + $"round|{alex_key}|7|1|1|Alex"), "Unknown game rejected");
+        rejects<FormatException>(() => Wire.parse_rounds(Wire.prefix + "round|short|0|1|1|Alex", received), "Bad player key rejected");
+        rejects<FormatException>(() => Wire.parse_rounds(Wire.prefix + $"round|{alex_key}|7|1|1|Alex", received), "Unknown game rejected");
         var host = new Ledger();
         for (int i = 0; i < 3; i++) host.settle(new Round(alex_key, "Alex", CasinoGame.Slots, 100, 0));
         var rows = new string[Ledger.player_count_max * Ledger.game_count];

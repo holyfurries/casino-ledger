@@ -4,7 +4,7 @@ using Il2CppScheduleOne.Persistence;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.5.0", "holyfurries")]
+[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.5.1", "holyfurries")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace CasinoLedger;
@@ -75,7 +75,7 @@ public sealed class Main : MelonMod
         if (ui_failed) return;
         try
         {
-            DaySummary.update();
+            DaySummary.update(Time.unscaledTime);
             if (hud_toggle_key!.Value != KeyCode.None && Input.GetKeyDown(hud_toggle_key.Value))
             {
                 hud_visible = !hud_visible;
@@ -94,7 +94,7 @@ public sealed class Main : MelonMod
         Ledger ledger = CasinoStats.ledger;
         try
         {
-            if (ledger.day_round_count > 0 && day_summary_enabled!.Value && !ui_failed) DaySummary.show(ledger, day_number);
+            if (ledger.day_round_count > 0 && day_summary_enabled!.Value && !ui_failed) DaySummary.show(ledger, day_number, Time.unscaledTime);
         }
         catch (Exception error) { disable_ui(error); }
         ledger.start_day();

@@ -19,6 +19,7 @@ namespace CasinoLedger;
 internal static class Hooks
 {
     private const float spin_settle_seconds_max = 8f;
+    private const float spin_repeat_seconds = 1f;
     private sealed class Table
     {
         public IntPtr pointer;
@@ -78,6 +79,7 @@ internal static class Hooks
         {
             if (spins[i].machine != IntPtr.Zero && now_seconds >= spins[i].deadline_seconds) spin_settle(i);
         }
+        Sync.flush(now_seconds);
     }
 
     private static void card_round_begin(CasinoGameController __instance, NetworkObject __0)
@@ -144,7 +146,12 @@ internal static class Hooks
             int free = -1;
             for (int i = 0; i < spins.Length; i++)
             {
-                if (spins[i].machine == __instance.Pointer) return;
+                if (spins[i].machine == __instance.Pointer)
+                {
+                    float held_seconds = spin_settle_seconds_max - (spins[i].deadline_seconds - Time.unscaledTime);
+                    if (held_seconds < spin_repeat_seconds) return;
+                    spin_settle(i);
+                }
                 if (free < 0 && spins[i].machine == IntPtr.Zero) free = i;
             }
             if (free < 0) throw new InvalidOperationException("More concurrent slot spins than tracked machines.");

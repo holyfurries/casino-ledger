@@ -8,7 +8,7 @@ Who is actually winning at the casino. Tracks every player's profit and loss acr
   with the game HUD, starting at $0 for everyone.
 - **Day-end stats.** After the sleep summary closes, a stats screen shows the group's
   wagered, returned and profit totals, a chart of each player's running profit over the day,
-  profit per game, and the best and worst single rounds. Click Continue to close it.
+  profit per game, and the best and worst single rounds. Click Continue, or press the confirm button on a controller, to close it.
 - **Totals per save.** Rounds, wins, losses, pushes, amount wagered, amount returned and
   largest win and loss, per player and per game, kept in one file per save under
   `UserData/CasinoLedger`. A co-op world uses the same file name on the host and every client.

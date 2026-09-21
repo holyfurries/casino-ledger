@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>CasinoLedger</AssemblyName>
-    <Version>0.5.0</Version>
+    <Version>0.5.1</Version>
     <ModSettingsDll Condition="'$(ModSettingsDll)' == ''">../mod-settings/bin/Release/net6.0/ModSettings.dll</ModSettingsDll>
     <Nullable>enable</Nullable>
     <PathMap>$(MSBuildProjectDirectory)=/_/</PathMap>

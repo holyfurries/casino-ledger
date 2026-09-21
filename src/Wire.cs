@@ -5,19 +5,29 @@ namespace CasinoLedger;
 
 internal enum WireKind { None, Round, Hello, Total }
 
-/// Text messages sent over the Steam lobby chat. Every peer reports its own rounds; the host answers a hello with
+/// Text messages sent over the Steam lobby chat. Every peer reports its own rounds, batched; the host answers a hello with
 /// one total message per ledger row so late joiners and drifted peers converge on the host's numbers.
 internal static class Wire
 {
     public const string prefix = "CasinoLedger|2|";
-    public const int length_max = 512;
+    public const int length_max = 2048;
+    public const int rounds_per_message_max = 12;
     public const string hello = prefix + "hello";
 
-    public static string round(Round round)
+    public static string rounds(ReadOnlySpan<Round> batch)
     {
-        return prefix + string.Join('|', "round", round.player_key, ((int)round.game).ToString(CultureInfo.InvariantCulture),
-            round.stake.ToString("R", CultureInfo.InvariantCulture), round.returned.ToString("R", CultureInfo.InvariantCulture),
-            Ledger.safe_name(round.player_name));
+        if (batch.Length == 0 || batch.Length > rounds_per_message_max) throw new ArgumentOutOfRangeException(nameof(batch));
+        var parts = new string[batch.Length];
+        for (int i = 0; i < batch.Length; i++)
+        {
+            Round round = batch[i];
+            parts[i] = string.Join('|', round.player_key, ((int)round.game).ToString(CultureInfo.InvariantCulture),
+                round.stake.ToString("R", CultureInfo.InvariantCulture), round.returned.ToString("R", CultureInfo.InvariantCulture),
+                Ledger.safe_name(round.player_name));
+        }
+        string message = prefix + "round|" + string.Join(';', parts);
+        if (message.Length > length_max) throw new InvalidOperationException("Round batch exceeds the message limit.");
+        return message;
     }
 
     public static string total(string ledger_row) => prefix + "total|" + ledger_row;
@@ -32,16 +42,22 @@ internal static class Wire
         return WireKind.None;
     }
 
-    public static Round parse_round(string message)
+    public static int parse_rounds(string message, Span<Round> target)
     {
-        string[] fields = message[prefix.Length..].Split('|');
-        if (fields.Length != 6 || fields[0] != "round") throw new FormatException("Round message has the wrong shape.");
-        if (fields[1].Length != 64) throw new FormatException("Round message has a bad player key.");
-        int game = int.Parse(fields[2], CultureInfo.InvariantCulture);
-        if (game < 0 || game >= Ledger.game_count) throw new FormatException("Round message names an unknown game.");
-        double stake = double.Parse(fields[3], NumberStyles.Float, CultureInfo.InvariantCulture);
-        double returned = double.Parse(fields[4], NumberStyles.Float, CultureInfo.InvariantCulture);
-        return new Round(fields[1], Ledger.safe_name(fields[5]), (CasinoGame)game, stake, returned);
+        string[] parts = message[(prefix.Length + "round|".Length)..].Split(';');
+        if (parts.Length > rounds_per_message_max || parts.Length > target.Length) throw new FormatException("Round message has too many rounds.");
+        for (int i = 0; i < parts.Length; i++)
+        {
+            string[] fields = parts[i].Split('|');
+            if (fields.Length != 5) throw new FormatException("Round message has the wrong shape.");
+            if (fields[0].Length != 64) throw new FormatException("Round message has a bad player key.");
+            int game = int.Parse(fields[1], CultureInfo.InvariantCulture);
+            if (game < 0 || game >= Ledger.game_count) throw new FormatException("Round message names an unknown game.");
+            double stake = double.Parse(fields[2], NumberStyles.Float, CultureInfo.InvariantCulture);
+            double returned = double.Parse(fields[3], NumberStyles.Float, CultureInfo.InvariantCulture);
+            target[i] = new Round(fields[0], Ledger.safe_name(fields[4]), (CasinoGame)game, stake, returned);
+        }
+        return parts.Length;
     }
 
     public static string parse_total(string message)

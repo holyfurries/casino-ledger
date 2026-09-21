@@ -1,4 +1,5 @@
 using System;
+using Il2CppScheduleOne;
 using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.PlayerScripts;
 using Il2CppTMPro;
@@ -11,6 +12,7 @@ internal static class DaySummary
 {
     private const int line_count_max = 8;
     private const string ui_element_name = "CasinoLedgerDaySummary";
+    private const float input_delay_seconds = 0.4f;
     private const float content_width = 1120f;
     private const float panel_height = 330f;
     private const float chart_width = 640f;
@@ -26,6 +28,7 @@ internal static class DaySummary
     };
     private static readonly string[] game_names = { "Blackjack", "Ride the Bus", "Slots" };
     private static GameObject? canvas_object;
+    private static float input_open_seconds;
 
     public static bool showing => canvas_object != null;
 
@@ -40,15 +43,16 @@ internal static class DaySummary
         if (camera.activeUIElements.Count == 0) camera.LockMouse();
     }
 
-    public static void update()
+    public static void update(float now_seconds)
     {
         if (canvas_object == null) return;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        if (Input.GetKeyDown(KeyCode.Escape)) reset();
+        if (now_seconds < input_open_seconds) return;
+        if (GameInput.GetButtonDown(GameInput.ButtonCode.Submit) || Input.GetKeyDown(KeyCode.Escape)) reset();
     }
 
-    public static void show(Ledger ledger, int day_number)
+    public static void show(Ledger ledger, int day_number, float now_seconds)
     {
         if (ledger.day_round_count <= 0) throw new ArgumentOutOfRangeException(nameof(ledger), "No rounds to summarize.");
         reset();
@@ -59,6 +63,7 @@ internal static class DaySummary
 
         canvas_object = Ui.canvas("CasinoLedgerDaySummary", 29500);
         canvas_object.AddComponent<GraphicRaycaster>();
+        input_open_seconds = now_seconds + input_delay_seconds;
         if (PlayerSingleton<PlayerCamera>.InstanceExists)
         {
             PlayerSingleton<PlayerCamera>.Instance.AddActiveUIElement(ui_element_name);
