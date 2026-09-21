@@ -27,6 +27,7 @@ they are not carried over; the old files are left in place. The mod never change
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `hud_enabled` | `true` | Show the live standings panel |
+| `hud_toggle_key` | `F7` | Key that shows or hides the panel in game and saves the choice; `None` disables the key |
 | `day_summary_enabled` | `true` | Show the day-end stats screen |
 | `hud_offset_x` | `32` | Panel distance from the right edge, in 1920x1080 units |
 | `hud_offset_y` | `420` | Panel distance from the top edge, in 1920x1080 units |
