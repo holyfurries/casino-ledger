@@ -10,8 +10,6 @@ namespace CasinoLedger;
 internal static class Hud
 {
     private const int row_count_max = 8;
-    public const float text_size_default = 16f;
-    private const float text_size_reference = 22f;
     private readonly record struct Standing(string name, double net);
     private static readonly Comparer<Standing> by_net_descending = Comparer<Standing>.Create(
         (left, right) => right.net.CompareTo(left.net));
@@ -20,11 +18,11 @@ internal static class Hud
     private static readonly TextMeshProUGUI?[] names = new TextMeshProUGUI?[row_count_max];
     private static GameObject? canvas_object;
     private static RectTransform? panel;
-    private static float scale = text_size_default / text_size_reference;
-    private static float panel_width => 300f * scale;
-    private static float row_height => 37f * scale;
-    private static float padding => 14f * scale;
-    private static float amount_width => 124f * scale;
+    private static float scale = 1f;
+    private static float panel_width => 160f * scale;
+    private static float row_height => 19f * scale;
+    private static float padding => 7f * scale;
+    private static float amount_width => 68f * scale;
 
     public static void reset()
     {
@@ -35,9 +33,9 @@ internal static class Hud
         Array.Clear(names, 0, names.Length);
     }
 
-    public static void refresh(bool visible, Vector2 offset, float text_size)
+    public static void refresh(bool visible, Vector2 offset, float scale_setting)
     {
-        float scale_wanted = (float.IsFinite(text_size) ? Math.Clamp(text_size, 10f, 32f) : text_size_default) / text_size_reference;
+        float scale_wanted = float.IsFinite(scale_setting) ? Math.Clamp(scale_setting, 0.5f, 3f) : 1f;
         if (scale_wanted != scale)
         {
             reset();
@@ -86,16 +84,16 @@ internal static class Hud
     private static void build()
     {
         canvas_object = Ui.canvas("CasinoLedgerHud", 29000);
-        panel = Ui.outlined_panel(canvas_object.transform, "Standings");
+        panel = Ui.outlined_panel(canvas_object.transform, "Standings", fill_alpha: 0.55f, corner_radius: 6f * scale);
         for (int i = 0; i < row_count_max; i++)
         {
             float row_top = -(padding + i * row_height);
-            TextMeshProUGUI amount = Ui.text(panel, "Amount", 22f * scale, TextAlignmentOptions.Left);
-            Ui.place(amount.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(padding + 8f * scale, row_top),
+            TextMeshProUGUI amount = Ui.text(panel, "Amount", 12f * scale, TextAlignmentOptions.Left);
+            Ui.place(amount.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(padding + 3f * scale, row_top),
                 new Vector2(amount_width, row_height));
-            TextMeshProUGUI name = Ui.text(panel, "Name", 20f * scale, TextAlignmentOptions.Right);
-            Ui.place(name.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-(padding + 8f * scale), row_top),
-                new Vector2(panel_width - amount_width - padding * 2f - 24f * scale, row_height));
+            TextMeshProUGUI name = Ui.text(panel, "Name", 11f * scale, TextAlignmentOptions.Right);
+            Ui.place(name.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-(padding + 3f * scale), row_top),
+                new Vector2(panel_width - amount_width - padding * 2f - 10f * scale, row_height));
             amounts[i] = amount;
             names[i] = name;
         }

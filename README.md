@@ -22,7 +22,7 @@ they are not carried over; the old files are left in place. The mod never change
 
 ## Settings
 
-The game's settings screen gets a **holyfurries** tab with a Casino standings switch, in the
+The game's settings screen gets a **holyfurries** tab with a Casino standings switch (F7 does the same in game), in the
 main menu and the pause menu. Everything else is in `UserData/MelonPreferences.cfg`, section `CasinoLedger`:
 
 | Key | Default | Meaning |
@@ -31,7 +31,8 @@ main menu and the pause menu. Everything else is in `UserData/MelonPreferences.c
 | `day_summary_enabled` | `true` | Show the day-end stats screen |
 | `hud_offset_x` | `32` | Panel distance from the right edge, in 1920x1080 units |
 | `hud_offset_y` | `420` | Panel distance from the top edge, in 1920x1080 units |
-| `hud_text_size` | `16` | Panel text size from 10 to 32; the panel scales with it |
+| `hud_scale` | `1` | Panel size multiplier from 0.5 to 3 |
+| `hud_toggle_key` | `F7` | Key that shows or hides the panel in game and saves the choice; `None` disables the key |
 
 ## For mod authors
 

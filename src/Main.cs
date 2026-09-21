@@ -4,7 +4,7 @@ using Il2CppScheduleOne.Persistence;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.3.1", "holyfurries")]
+[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.3.2", "holyfurries")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace CasinoLedger;
@@ -15,7 +15,8 @@ public sealed class Main : MelonMod
     private static MelonPreferences_Entry<bool>? day_summary_enabled;
     private static MelonPreferences_Entry<float>? hud_offset_x;
     private static MelonPreferences_Entry<float>? hud_offset_y;
-    private static MelonPreferences_Entry<float>? hud_text_size;
+    private static MelonPreferences_Entry<float>? hud_scale;
+    private static MelonPreferences_Entry<KeyCode>? hud_toggle_key;
     private static bool running;
     private static bool ui_failed;
     private static int day_number;
@@ -27,6 +28,7 @@ public sealed class Main : MelonMod
         {
             hud_enabled!.Value = value;
             MelonPreferences.Save();
+            SettingsTab.show_state(value);
         }
     }
     internal static bool ready => running && LoadManager.InstanceExists && LoadManager.Instance.IsGameLoaded;
@@ -38,7 +40,8 @@ public sealed class Main : MelonMod
         day_summary_enabled = preferences.CreateEntry("day_summary_enabled", true, "Show casino stats after the sleep summary");
         hud_offset_x = preferences.CreateEntry("hud_offset_x", 32f, "HUD distance from the right screen edge (1920x1080 units)");
         hud_offset_y = preferences.CreateEntry("hud_offset_y", 420f, "HUD distance from the top screen edge (1920x1080 units)");
-        hud_text_size = preferences.CreateEntry("hud_text_size", Hud.text_size_default, "HUD text size, 10 to 32 (1920x1080 units)");
+        hud_scale = preferences.CreateEntry("hud_scale", 1f, "HUD size multiplier, 0.5 to 3");
+        hud_toggle_key = preferences.CreateEntry("hud_toggle_key", KeyCode.F7, "Key that shows or hides the HUD in game; None turns the key off");
         CasinoStats.subscriber_failed = error => LoggerInstance.Warning($"A round_settled subscriber threw: {error}");
         CasinoStats.round_settled += note_day_number;
         Hooks.install(HarmonyInstance);
@@ -67,10 +70,15 @@ public sealed class Main : MelonMod
         try
         {
             DaySummary.update(Time.unscaledTime);
+            if (hud_toggle_key!.Value != KeyCode.None && Input.GetKeyDown(hud_toggle_key.Value))
+            {
+                hud_visible = !hud_visible;
+                next_hud_refresh_seconds = 0;
+            }
             if (Time.unscaledTime < next_hud_refresh_seconds) return;
             next_hud_refresh_seconds = Time.unscaledTime + 0.5f;
             Hud.refresh(visible: hud_enabled!.Value && !DaySummary.showing, new Vector2(hud_offset_x!.Value, hud_offset_y!.Value),
-                hud_text_size!.Value);
+                hud_scale!.Value);
         }
         catch (Exception error) { disable_ui(error); }
     }

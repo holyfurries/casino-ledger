@@ -20,11 +20,17 @@ internal static class SettingsTab
     private const int category_count_max = 16;
     private const int row_count_max = 8;
     private const float row_spacing = 60f;
+    private static UIToggle? standings_toggle;
 
     public static void install(HarmonyLib.Harmony harmony)
     {
         harmony.Patch(AccessTools.Method(typeof(SettingsScreen), nameof(SettingsScreen.Awake)),
             postfix: new HarmonyMethod(typeof(SettingsTab), nameof(add_tab)));
+    }
+
+    public static void show_state(bool visible)
+    {
+        if (standings_toggle != null) standings_toggle.SetStateWithoutNotify(visible);
     }
 
     private static void add_tab(SettingsScreen __instance)
@@ -67,7 +73,8 @@ internal static class SettingsTab
             else if (label.name.StartsWith("Label", StringComparison.Ordinal)) label.gameObject.SetActive(false);
         }
         row.SetActive(true);
-        toggle.SetStateWithoutNotify(Main.hud_visible);
+        standings_toggle = toggle;
+        show_state(Main.hud_visible);
         toggle.OnChanged.AddListener(new Action<bool>(visible => Main.hud_visible = visible));
     }
 

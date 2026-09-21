@@ -1,6 +1,6 @@
 # Development
 
-Version 0.3.1, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
+Version 0.3.2, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
 
 ## Layout
 
@@ -68,4 +68,5 @@ Build and tests do not establish native UI layout, Harmony RPC ordering or repli
   Casino standings switch that matches `hud_enabled`, flips the HUD, and survives reopening the
   menu. The other tabs still switch. Known gap: gamepad bumper cycling is untested.
 - Two saves keep separate totals; a co-op client logs the same ledger file name as the host
-  and keeps its totals after rejoining. HUD readable at `hud_text_size` 10, 16 and 32.
+  and keeps its totals after rejoining. HUD text matches the Clear Minimap clock (12 units) at `hud_scale` 1; corners and outline stay
+  concentric at 0.5 and 3; F7 toggles it and the settings switch follows.
