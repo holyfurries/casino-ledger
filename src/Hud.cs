@@ -84,7 +84,7 @@ internal static class Hud
     private static void build()
     {
         canvas_object = Ui.canvas("CasinoLedgerHud", 29000);
-        panel = Ui.outlined_panel(canvas_object.transform, "Standings", fill_alpha: 0.55f, corner_radius: 6f * scale);
+        panel = Ui.outlined_panel(canvas_object.transform, "Standings", fill_alpha: 0.75f, corner_radius: 6f * scale);
         for (int i = 0; i < row_count_max; i++)
         {
             float row_top = -(padding + i * row_height);

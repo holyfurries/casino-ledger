@@ -1,6 +1,6 @@
 # Development
 
-Version 0.3.2, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
+Version 0.3.3, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
 
 ## Layout
 
@@ -39,7 +39,9 @@ have that data; hooks ignore rounds until then. The HUD shows these per-save tot
 clones the last category's tab toggle and panel, hides the cloned rows and appends a
 `SettingsCategory` to `Categories` so `ShowCategory` handles it. It then copies a game
 `SettingsToggle` row into that panel, removes the game's component and stacks it under any rows
-other holyfurries mods added; the file is meant to be copied into them. A failure logs a warning
+other holyfurries mods added, naming it through `UIOption.optionName` because `UIOption.Awake`
+rewrites the label. The tab bar is a left-aligned layout of fixed 90 unit tabs, so all tabs are
+narrowed to fit the 700 unit window; the file is meant to be copied into them. A failure logs a warning
 and leaves the config file as the only switch.
 Hook failures pause tracking for the scene; overlay failures disable only the overlay.
 

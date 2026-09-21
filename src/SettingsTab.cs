@@ -65,6 +65,7 @@ internal static class SettingsTab
         row.name = "CasinoLedgerStandings";
         UnityEngine.Object.DestroyImmediate(row.GetComponent<SettingsToggle>());
         UIToggle toggle = row.GetComponent<UIToggle>() ?? throw new InvalidOperationException("Settings toggle row has no UIToggle.");
+        toggle.optionName = "Casino standings";
         RectTransform rect = row.GetComponent<RectTransform>();
         rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -10f - row_index * row_spacing);
         foreach (TextMeshProUGUI label in row.GetComponentsInChildren<TextMeshProUGUI>(true))
@@ -91,13 +92,7 @@ internal static class SettingsTab
         tab.name = tab_name;
         tab.SetIsOnWithoutNotify(false);
         TextMeshProUGUI? label = tab.GetComponentInChildren<TextMeshProUGUI>(true);
-        if (label != null)
-        {
-            label.fontSizeMax = label.fontSize;
-            label.fontSizeMin = 6f;
-            label.enableAutoSizing = true;
-            label.text = tab_label;
-        }
+        if (label != null) label.text = tab_label;
 
         int index = categories.Length;
         var extended = new Il2CppReferenceArray<SettingsScreen.SettingsCategory>(index + 1);
@@ -105,6 +100,31 @@ internal static class SettingsTab
         extended[index] = new SettingsScreen.SettingsCategory { Toggle = tab, Panel = panel };
         screen.Categories = extended;
         tab.onValueChanged.AddListener(new Action<bool>(selected => { if (selected) screen.ShowCategory(index); }));
+        fit_tabs(screen.GetComponent<RectTransform>(), tab.transform.parent);
         return panel;
+    }
+
+    private static void fit_tabs(RectTransform screen, Transform tabs)
+    {
+        const float side_margin = 21f;
+        const float spacing = 5f;
+        int tab_count = 0;
+        for (int i = 0; i < tabs.childCount; i++)
+        {
+            if (tabs.GetChild(i).gameObject.activeSelf) tab_count++;
+        }
+        if (tab_count == 0 || tab_count > category_count_max) throw new InvalidOperationException("Unexpected settings tab count.");
+        float width_max = (screen.rect.width - side_margin * 2f - spacing * (tab_count - 1)) / tab_count;
+        if (!float.IsFinite(width_max) || width_max < 30f) throw new InvalidOperationException("Settings tabs do not fit.");
+        for (int i = 0; i < tabs.childCount; i++)
+        {
+            RectTransform rect = tabs.GetChild(i).GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(Math.Min(rect.sizeDelta.x, width_max), rect.sizeDelta.y);
+            TextMeshProUGUI? label = rect.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label == null || label.enableAutoSizing) continue;
+            label.fontSizeMax = label.fontSize;
+            label.fontSizeMin = 6f;
+            label.enableAutoSizing = true;
+        }
     }
 }
