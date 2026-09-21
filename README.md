@@ -22,12 +22,12 @@ they are not carried over; the old files are left in place. The mod never change
 
 ## Settings
 
-`UserData/MelonPreferences.cfg`, section `CasinoLedger`:
+The game's settings screen gets a **Casino** tab with a switch for the standings panel, in the
+main menu and the pause menu. Everything else is in `UserData/MelonPreferences.cfg`, section `CasinoLedger`:
 
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `hud_enabled` | `true` | Show the live standings panel |
-| `hud_toggle_key` | `F7` | Key that shows or hides the panel in game and saves the choice; `None` disables the key |
 | `day_summary_enabled` | `true` | Show the day-end stats screen |
 | `hud_offset_x` | `32` | Panel distance from the right edge, in 1920x1080 units |
 | `hud_offset_y` | `420` | Panel distance from the top edge, in 1920x1080 units |
