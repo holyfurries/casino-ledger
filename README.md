@@ -4,8 +4,8 @@ Who is actually winning at the casino. Tracks every player's profit and loss acr
 **Blackjack**, **Ride the Bus** and **Slots**.
 
 - **Live standings.** A panel on the right of the screen lists each player's total casino
-  profit in this save, green when up, red when down, best first. It appears once anyone
-  present has played a round.
+  profit in this save, green when up, red when down, best first. It is always on screen
+  with the game HUD, starting at $0 for everyone.
 - **Day-end stats.** After the sleep summary closes, a stats screen shows the group's
   wagered, returned and profit totals, a chart of each player's running profit over the day,
   profit per game, and the best and worst single rounds. Press Space to close it.

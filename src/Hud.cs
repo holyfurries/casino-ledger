@@ -71,17 +71,14 @@ internal static class Hud
     private static int collect()
     {
         int standing_count = 0;
-        int round_count = 0;
         int player_count = Math.Min(Player.PlayerList.Count, Ledger.player_count_max);
         for (int i = 0; i < player_count && standing_count < row_count_max; i++)
         {
             Player player = Player.PlayerList[i];
             if (player == null || string.IsNullOrEmpty(player.PlayerCode)) continue;
             Totals lifetime = CasinoStats.ledger.lifetime(CasinoStats.player_key(player.PlayerCode));
-            round_count += lifetime.round_count;
             standings[standing_count++] = new Standing(Ledger.safe_name(player.PlayerName), lifetime.net);
         }
-        if (round_count == 0) return 0;
         Array.Sort(standings, 0, standing_count, by_net_descending);
         return standing_count;
     }
