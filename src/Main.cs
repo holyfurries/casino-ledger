@@ -4,7 +4,7 @@ using Il2CppScheduleOne.Persistence;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.1.1", "holyfurries")]
+[assembly: MelonInfo(typeof(CasinoLedger.Main), "Casino Ledger", "0.2.0", "holyfurries")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace CasinoLedger;
@@ -15,6 +15,7 @@ public sealed class Main : MelonMod
     private static MelonPreferences_Entry<bool>? day_summary_enabled;
     private static MelonPreferences_Entry<float>? hud_offset_x;
     private static MelonPreferences_Entry<float>? hud_offset_y;
+    private static MelonPreferences_Entry<float>? hud_text_size;
     private static bool running;
     private static bool ui_failed;
     private static int day_number;
@@ -24,10 +25,11 @@ public sealed class Main : MelonMod
     public override void OnInitializeMelon()
     {
         MelonPreferences_Category preferences = MelonPreferences.CreateCategory("CasinoLedger");
-        hud_enabled = preferences.CreateEntry("hud_enabled", true, "Show each player's casino profit for the day");
+        hud_enabled = preferences.CreateEntry("hud_enabled", true, "Show each player's total casino profit in this save");
         day_summary_enabled = preferences.CreateEntry("day_summary_enabled", true, "Show casino stats after the sleep summary");
         hud_offset_x = preferences.CreateEntry("hud_offset_x", 32f, "HUD distance from the right screen edge (1920x1080 units)");
         hud_offset_y = preferences.CreateEntry("hud_offset_y", 420f, "HUD distance from the top screen edge (1920x1080 units)");
+        hud_text_size = preferences.CreateEntry("hud_text_size", Hud.text_size_default, "HUD text size, 10 to 32 (1920x1080 units)");
         CasinoStats.subscriber_failed = error => LoggerInstance.Warning($"A round_settled subscriber threw: {error}");
         CasinoStats.round_settled += note_day_number;
         Hooks.install(HarmonyInstance);
@@ -57,7 +59,8 @@ public sealed class Main : MelonMod
             DaySummary.update(Time.unscaledTime);
             if (Time.unscaledTime < next_hud_refresh_seconds) return;
             next_hud_refresh_seconds = Time.unscaledTime + 0.5f;
-            Hud.refresh(visible: hud_enabled!.Value && !DaySummary.showing, new Vector2(hud_offset_x!.Value, hud_offset_y!.Value));
+            Hud.refresh(visible: hud_enabled!.Value && !DaySummary.showing, new Vector2(hud_offset_x!.Value, hud_offset_y!.Value),
+                hud_text_size!.Value);
         }
         catch (Exception error) { disable_ui(error); }
     }

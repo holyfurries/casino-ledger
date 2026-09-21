@@ -7,7 +7,7 @@ namespace CasinoLedger;
 public readonly record struct RoundReport(Round round, Totals lifetime, Totals day);
 
 /// Entry point for other mods. Subscribe to round_settled or query totals by player_key.
-/// Everything runs on the Unity main thread. Remote players' totals are what this peer has observed.
+/// Totals cover the loaded save only. Everything runs on the Unity main thread. Remote players' totals are what this peer has observed.
 public static class CasinoStats
 {
     internal static readonly Ledger ledger = new();
@@ -19,6 +19,15 @@ public static class CasinoStats
     {
         if (string.IsNullOrEmpty(player_code) || player_code.Length > 128) throw new ArgumentOutOfRangeException(nameof(player_code));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(player_code)));
+    }
+
+    internal static string world_key(int seed, string? organisation_name)
+    {
+        string organisation = organisation_name ?? "";
+        if (organisation.Length > 128) throw new ArgumentOutOfRangeException(nameof(organisation_name));
+        string key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{seed}|{organisation}")))[..16];
+        if (key.Length != 16) throw new InvalidOperationException("World key has the wrong length.");
+        return key;
     }
 
     public static Totals lifetime(string player_key, CasinoGame? game = null) => ledger.lifetime(player_key, game);

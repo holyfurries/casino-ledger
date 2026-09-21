@@ -50,17 +50,11 @@ internal static class Program
         rejects<ArgumentOutOfRangeException>(() => ledger.settle(new Round("", "Alex", CasinoGame.Slots, 10, 1)), "Empty player key rejected");
         require(ledger.day_round_count == 0, "Rejected rounds leave the ledger untouched");
 
-        var imported = new Ledger();
-        imported.settle(new Round("alex", "Alex", CasinoGame.Blackjack, 100, 0));
-        imported.import_net("alex", CasinoGame.Blackjack, -1250);
-        imported.import_net("sam", CasinoGame.Blackjack, 400);
-        require(imported.lifetime("alex").net == -1350 && imported.lifetime("alex").round_count == 1, "Imported net adds to lifetime without inventing rounds");
-        require(imported.lifetime("alex").loss_largest == 100, "Imported net does not count as a largest round");
-        require(imported.lifetime("sam").net == 400 && imported.day("sam").round_count == 0, "Imported net does not touch the day");
-        var reloaded = new Ledger();
-        reloaded.load(imported.serialize());
-        require(reloaded.lifetime("sam").net == 400 && reloaded.lifetime("sam").round_count == 0, "Import-only players round-trip");
-        rejects<ArgumentOutOfRangeException>(() => imported.import_net("alex", CasinoGame.Blackjack, double.NaN), "Non-finite import rejected");
+        string world = CasinoStats.world_key(1234, "Holy Furries");
+        require(world.Length == 16 && world == CasinoStats.world_key(1234, "Holy Furries"), "World key is stable for host and clients");
+        require(world != CasinoStats.world_key(1235, "Holy Furries") && world != CasinoStats.world_key(1234, "Other"), "Different saves get different ledgers");
+        require(CasinoStats.world_key(0, null).Length == 16, "Missing organisation name still yields a key");
+        rejects<ArgumentOutOfRangeException>(() => CasinoStats.world_key(1, new string('a', 129)), "Oversized organisation name rejected");
 
         var busy = new Ledger();
         for (int i = 0; i < 200; i++) busy.settle(new Round("alex", "Alex", CasinoGame.Slots, 10, i % 2 == 0 ? 0 : 25));

@@ -10,18 +10,21 @@ namespace CasinoLedger;
 internal static class Hud
 {
     private const int row_count_max = 8;
-    private const float panel_width = 300f;
-    private const float row_height = 37f;
-    private const float padding = 14f;
-    private const float amount_width = 112f;
-    private readonly record struct Standing(string name, double day_net);
-    private static readonly Comparer<Standing> by_day_net_descending = Comparer<Standing>.Create(
-        (left, right) => right.day_net.CompareTo(left.day_net));
+    public const float text_size_default = 16f;
+    private const float text_size_reference = 22f;
+    private readonly record struct Standing(string name, double net);
+    private static readonly Comparer<Standing> by_net_descending = Comparer<Standing>.Create(
+        (left, right) => right.net.CompareTo(left.net));
     private static readonly Standing[] standings = new Standing[row_count_max];
     private static readonly TextMeshProUGUI?[] amounts = new TextMeshProUGUI?[row_count_max];
     private static readonly TextMeshProUGUI?[] names = new TextMeshProUGUI?[row_count_max];
     private static GameObject? canvas_object;
     private static RectTransform? panel;
+    private static float scale = text_size_default / text_size_reference;
+    private static float panel_width => 300f * scale;
+    private static float row_height => 37f * scale;
+    private static float padding => 14f * scale;
+    private static float amount_width => 124f * scale;
 
     public static void reset()
     {
@@ -32,8 +35,14 @@ internal static class Hud
         Array.Clear(names, 0, names.Length);
     }
 
-    public static void refresh(bool visible, Vector2 offset)
+    public static void refresh(bool visible, Vector2 offset, float text_size)
     {
+        float scale_wanted = (float.IsFinite(text_size) ? Math.Clamp(text_size, 10f, 32f) : text_size_default) / text_size_reference;
+        if (scale_wanted != scale)
+        {
+            reset();
+            scale = scale_wanted;
+        }
         bool game_hud_visible = HUD.InstanceExists && HUD.Instance.canvas != null && HUD.Instance.canvas.enabled;
         int standing_count = visible && game_hud_visible ? collect() : 0;
         if (standing_count == 0)
@@ -53,25 +62,27 @@ internal static class Hud
             amount.gameObject.SetActive(i < standing_count);
             name.gameObject.SetActive(i < standing_count);
             if (i >= standing_count) continue;
-            amount.text = Ledger.format_money(standings[i].day_net, signed: true);
-            amount.color = Ui.money_color(standings[i].day_net);
+            amount.text = Ledger.format_money(standings[i].net, signed: true);
+            amount.color = Ui.money_color(standings[i].net);
             name.text = standings[i].name;
         }
     }
 
     private static int collect()
     {
-        if (CasinoStats.ledger.day_round_count == 0) return 0;
         int standing_count = 0;
+        int round_count = 0;
         int player_count = Math.Min(Player.PlayerList.Count, Ledger.player_count_max);
         for (int i = 0; i < player_count && standing_count < row_count_max; i++)
         {
             Player player = Player.PlayerList[i];
             if (player == null || string.IsNullOrEmpty(player.PlayerCode)) continue;
-            double day_net = CasinoStats.ledger.day(CasinoStats.player_key(player.PlayerCode)).net;
-            standings[standing_count++] = new Standing(Ledger.safe_name(player.PlayerName), day_net);
+            Totals lifetime = CasinoStats.ledger.lifetime(CasinoStats.player_key(player.PlayerCode));
+            round_count += lifetime.round_count;
+            standings[standing_count++] = new Standing(Ledger.safe_name(player.PlayerName), lifetime.net);
         }
-        Array.Sort(standings, 0, standing_count, by_day_net_descending);
+        if (round_count == 0) return 0;
+        Array.Sort(standings, 0, standing_count, by_net_descending);
         return standing_count;
     }
 
@@ -82,12 +93,12 @@ internal static class Hud
         for (int i = 0; i < row_count_max; i++)
         {
             float row_top = -(padding + i * row_height);
-            TextMeshProUGUI amount = Ui.text(panel, "Amount", 22f, TextAlignmentOptions.Left);
-            Ui.place(amount.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(padding + 8f, row_top),
+            TextMeshProUGUI amount = Ui.text(panel, "Amount", 22f * scale, TextAlignmentOptions.Left);
+            Ui.place(amount.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(padding + 8f * scale, row_top),
                 new Vector2(amount_width, row_height));
-            TextMeshProUGUI name = Ui.text(panel, "Name", 20f, TextAlignmentOptions.Right);
-            Ui.place(name.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-(padding + 8f), row_top),
-                new Vector2(panel_width - amount_width - padding * 2f - 24f, row_height));
+            TextMeshProUGUI name = Ui.text(panel, "Name", 20f * scale, TextAlignmentOptions.Right);
+            Ui.place(name.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-(padding + 8f * scale), row_top),
+                new Vector2(panel_width - amount_width - padding * 2f - 24f * scale, row_height));
             amounts[i] = amount;
             names[i] = name;
         }

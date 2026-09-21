@@ -6,6 +6,7 @@ using Il2CppFishNet.Connection;
 using Il2CppFishNet.Object;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppScheduleOne.Casino;
+using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Money;
 using Il2CppScheduleOne.PlayerScripts;
 using Il2CppScheduleOne.UI;
@@ -35,6 +36,7 @@ internal static class Hooks
     private static readonly Spin[] spins = new Spin[32];
     private static string ledger_path = "";
     private static bool failed;
+    private static bool tracking => Main.ready && !failed && ledger_path.Length > 0;
 
     public static void install(HarmonyLib.Harmony harmony)
     {
@@ -62,13 +64,19 @@ internal static class Hooks
         foreach (Table table in tables) { table.pointer = IntPtr.Zero; table.armed = false; }
         Array.Clear(spins, 0, spins.Length);
         failed = false;
-        try { load(); }
-        catch (Exception error) { pause(error); }
+        ledger_path = "";
+        CasinoStats.ledger.clear();
     }
 
     public static void update(float now_seconds)
     {
         if (failed) return;
+        if (ledger_path.Length == 0)
+        {
+            try { load(); }
+            catch (Exception error) { pause(error); }
+            return;
+        }
         for (int i = 0; i < spins.Length; i++)
         {
             if (spins[i].machine != IntPtr.Zero && now_seconds >= spins[i].deadline_seconds) spin_settle(i);
@@ -77,7 +85,7 @@ internal static class Hooks
 
     private static void card_round_begin(CasinoGameController __instance, NetworkObject __0)
     {
-        if (!Main.ready || failed || Player.Local == null || __0 == null || __0 != Player.Local.NetworkObject) return;
+        if (!tracking || Player.Local == null || __0 == null || __0 != Player.Local.NetworkObject) return;
         try
         {
             for (int i = 0; i < tables.Length; i++)
@@ -94,7 +102,7 @@ internal static class Hooks
     private static void card_round_before_settlement(CasinoGameController __instance, out Settlement __state)
     {
         __state = default;
-        if (!Main.ready || failed || !MoneyManager.InstanceExists || Player.Local == null) return;
+        if (!tracking || !MoneyManager.InstanceExists || Player.Local == null) return;
         try
         {
             foreach (Table table in tables)
@@ -125,7 +133,7 @@ internal static class Hooks
 
     private static void card_round_receive(NetworkConnection __0, NetworkObject __1, string __2, float __3)
     {
-        if (!Main.ready || failed || __1 == null || __2 == null || !__2.StartsWith(round_key_prefix, StringComparison.Ordinal)) return;
+        if (!tracking || __1 == null || __2 == null || !__2.StartsWith(round_key_prefix, StringComparison.Ordinal)) return;
         try
         {
             Player player = __1.GetComponent<Player>();
@@ -143,7 +151,7 @@ internal static class Hooks
 
     private static void spin_begin(SlotMachine __instance, NetworkConnection __0, Il2CppStructArray<SlotMachine.ESymbol> __1, int __2)
     {
-        if (!Main.ready || failed || __0 == null || __1 == null) return;
+        if (!tracking || __0 == null || __1 == null) return;
         try
         {
             Player? spinner = null;
@@ -191,7 +199,7 @@ internal static class Hooks
 
     private static void day_closed()
     {
-        if (!Main.ready || failed) return;
+        if (!tracking) return;
         try
         {
             for (int i = 0; i < spins.Length; i++)
@@ -212,9 +220,10 @@ internal static class Hooks
 
     private static void load()
     {
+        if (!GameManager.InstanceExists) return;
         string directory = Path.Combine(MelonEnvironment.UserDataDirectory, "CasinoLedger");
         Directory.CreateDirectory(directory);
-        string path = Path.Combine(directory, "ledger.txt");
+        string path = Path.Combine(directory, CasinoStats.world_key(GameManager.Instance.seed, GameManager.Instance.OrganisationName) + ".txt");
         if (File.Exists(path))
         {
             if (new FileInfo(path).Length > 64 * 1024) throw new InvalidDataException("Casino ledger exceeds size limit.");
@@ -225,25 +234,7 @@ internal static class Hooks
             CasinoStats.ledger.clear();
         }
         ledger_path = path;
-        import_death_notices_totals();
-    }
-
-    private static void import_death_notices_totals()
-    {
-        string directory = Path.Combine(MelonEnvironment.UserDataDirectory, "DeathNoticesCasino");
-        if (!Directory.Exists(directory)) return;
-        string[] files = Directory.GetFiles(directory, "*.txt");
-        int file_count = Math.Min(files.Length, Ledger.player_count_max);
-        for (int i = 0; i < file_count; i++)
-        {
-            string player_key = Path.GetFileNameWithoutExtension(files[i]);
-            if (player_key.Length != 64 || new FileInfo(files[i]).Length > 128) continue;
-            double net = double.Parse(File.ReadAllText(files[i]), NumberStyles.Float, CultureInfo.InvariantCulture);
-            CasinoStats.ledger.import_net(player_key, CasinoGame.Blackjack, net);
-            save();
-            File.Move(files[i], files[i] + ".imported", true);
-            MelonLogger.Msg($"Casino Ledger: Imported a Death Notices card total of {net:F2}.");
-        }
+        MelonLogger.Msg($"Casino Ledger: Tracking this save in {Path.GetFileName(path)}.");
     }
 
     private static void save()

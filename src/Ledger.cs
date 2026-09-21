@@ -78,17 +78,6 @@ public sealed class Ledger
         assert(sum(player.lifetime).round_count >= sum(player.day).round_count, "day is a subset of lifetime");
     }
 
-    public void import_net(string player_key, CasinoGame game, double net)
-    {
-        if (string.IsNullOrEmpty(player_key) || player_key.Length > 64) throw new ArgumentOutOfRangeException(nameof(player_key));
-        if ((int)game >= game_count) throw new ArgumentOutOfRangeException(nameof(game));
-        if (!double.IsFinite(net) || Math.Abs(net) > total_max) throw new ArgumentOutOfRangeException(nameof(net));
-        PlayerRecord player = find(player_key) ?? claim(player_key);
-        var carried = new Totals(0, 0, 0, Math.Max(-net, 0), Math.Max(net, 0), 0, 0);
-        player.lifetime[(int)game] = player.lifetime[(int)game].add(carried);
-        assert(player.lifetime[(int)game].push_count >= 0, "import leaves counts untouched");
-    }
-
     public void start_day()
     {
         for (int i = 0; i < player_count; i++)

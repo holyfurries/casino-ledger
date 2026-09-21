@@ -3,22 +3,22 @@
 Who is actually winning at the casino. Tracks every player's profit and loss across
 **Blackjack**, **Ride the Bus** and **Slots**.
 
-- **Live standings.** A panel on the right of the screen lists each player's casino profit
-  for the day, green when up, red when down, best first. It appears after the first round
-  of the day.
+- **Live standings.** A panel on the right of the screen lists each player's total casino
+  profit in this save, green when up, red when down, best first. It appears once anyone
+  present has played a round.
 - **Day-end stats.** After the sleep summary closes, a stats screen shows the group's
   wagered, returned and profit totals, a chart of each player's running profit over the day,
   profit per game, and the best and worst single rounds. Press Space to close it.
-- **Lifetime totals.** Rounds, wins, losses, pushes, amount wagered, amount returned and
-  largest win and loss, per player and per game, kept in `UserData/CasinoLedger/ledger.txt`.
+- **Totals per save.** Rounds, wins, losses, pushes, amount wagered, amount returned and
+  largest win and loss, per player and per game, kept in one file per save under
+  `UserData/CasinoLedger`. A co-op world uses the same file name on the host and every client.
 
 Install it on every player. Slot results of all players are seen by everyone with the mod.
 Card game results are shared between players who have the mod. Totals for other players
 cover the rounds you were present for.
 
-Card totals from Death Notices 0.2 (`UserData/DeathNoticesCasino`) are imported once into your
-Blackjack lifetime profit, since that mod did not separate the two card games. The old
-files are renamed to `.imported`. The mod never changes payouts, odds or money.
+Totals from Casino Ledger 0.1 (`ledger.txt`) and Death Notices 0.2 mixed every save together, so
+they are not carried over; the old files are left in place. The mod never changes payouts, odds or money.
 
 ## Settings
 
@@ -30,6 +30,7 @@ files are renamed to `.imported`. The mod never changes payouts, odds or money.
 | `day_summary_enabled` | `true` | Show the day-end stats screen |
 | `hud_offset_x` | `32` | Panel distance from the right edge, in 1920x1080 units |
 | `hud_offset_y` | `420` | Panel distance from the top edge, in 1920x1080 units |
+| `hud_text_size` | `16` | Panel text size from 10 to 32; the panel scales with it |
 
 ## For mod authors
 

@@ -1,6 +1,6 @@
 # Development
 
-Version 0.1.1, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
+Version 0.2.0, built against local Schedule I 0.4.6f13 IL2CPP interop assemblies.
 
 ## Layout
 
@@ -31,10 +31,11 @@ figures, not an anti-cheat ledger.
 `DailySummary.Close` ends the casino day: pending spins settle, the stats screen shows if
 any round was played, and day totals reset. Day totals are not persisted; lifetime totals
 are written after every round with a temporary-file rename. Player keys are SHA-256 hashes
-of `PlayerCode`. On load, net totals in `UserData/DeathNoticesCasino/<key>.txt` (same key hash) are added
-to Blackjack lifetime through `Ledger.import_net`, saved, then the file is renamed to
-`.imported`. Hook failures pause tracking for the scene; overlay failures disable only
-the overlay.
+of `PlayerCode`. The ledger file is `<world_key>.txt`, where the world key hashes
+`GameManager.seed` and `OrganisationName`, both replicated to clients, so every peer in a
+world names the same save. It loads on the first update after `IsGameLoaded`, once clients
+have that data; hooks ignore rounds until then. The HUD shows these per-save totals.
+Hook failures pause tracking for the scene; overlay failures disable only the overlay.
 
 ## Build
 
@@ -57,5 +58,5 @@ Build and tests do not establish native UI layout, Harmony RPC ordering or repli
 - HUD position against the quest tracker at 16:9 and ultrawide; hidden with the game HUD.
 - Sleep with and without casino rounds; the stats screen follows the sleep summary, closes
   on Space, Escape or after thirty seconds, and the next day starts from zero.
-- Death Notices reports losses from all three games when both mods are installed, and
-  loads cleanly without Casino Ledger.
+- Two saves keep separate totals; a co-op client logs the same ledger file name as the host
+  and keeps its totals after rejoining. HUD readable at `hud_text_size` 10, 16 and 32.
